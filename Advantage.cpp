@@ -32,6 +32,6 @@ namespace Gaming
 
 	double Advantage::consume()
 	{
-		return Advantage::consume();
+		return 0.0;
 	}
 }

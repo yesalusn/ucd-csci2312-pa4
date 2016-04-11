@@ -13,7 +13,7 @@ namespace Gaming
 	Piece::Piece(const Game &g, const Position &p): __game(g), __position(p)
 	{
 		__id = this->__idGen++;
-		__finished = false;
+		__finished = false;//TODO: check to see how finish affects viable
 		__turned = false;
 	}
 
