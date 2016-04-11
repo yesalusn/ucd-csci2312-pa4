@@ -7,6 +7,7 @@
 
 #include <array>
 #include <random>
+
 #include "Exceptions.h"
 
 namespace Gaming {
