@@ -9,7 +9,8 @@ namespace Gaming
 {
 	const double Agent::AGENT_FATIGUE_RATE = 0.30;
 
-	Agent::Agent(const Game &g, const Position &p, double energy): Piece(g, p)
+	Agent::Agent(const Game &g, const Position &p, double energy):
+	Piece(g, p), __energy(energy)
 	{}
 
 	Agent::~Agent()

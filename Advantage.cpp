@@ -2,9 +2,13 @@
 // Created by Nikki on 4/2/2016.
 //
 
+#include <sstream>
+
 #include "Game.h"
 #include "Resource.h"
 #include "Advantage.h"
+
+using std::stringstream;
 
 namespace Gaming
 {
@@ -12,22 +16,23 @@ namespace Gaming
 
 	const double Advantage::ADVANTAGE_MULT_FACTOR = 2.0;
 
-	Advantage::Advantage(const Game &g, const Position &p, double capacity): Resource(g, p, __capacity)
-	{
-		__capacity = capacity;
-	}
+	Advantage::Advantage(const Game &g, const Position &p, double capacity):
+	Resource(g, p, (capacity * ADVANTAGE_MULT_FACTOR))
+	{}
 
 	Advantage::~Advantage()
 	{}
 
 	void Advantage::print(std::ostream &os) const
 	{
-		os << Advantage::ADVANTAGE_ID << Advantage::__id;
+		stringstream ss;
+		ss << ADVANTAGE_ID << __id;
+		os << ss.str();
 	}
 
 	double Advantage::getCapacity() const
 	{
-		return this->__capacity;
+		return __capacity;
 	}
 
 	double Advantage::consume()

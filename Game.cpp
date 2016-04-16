@@ -492,33 +492,12 @@ namespace Gaming
 	//      previously free position. In the first case, the position was already occupied, so it is still in the set. In the
 	//      second case, the position was empty, so needs to be added to the set.
 
-		std::set<Position> piece_positions;
-		for(auto it = __grid.begin(); it != __grid.end(); ++it)
-		{
-			if (*it != nullptr)
-				piece_positions.insert((*it)->getPosition());
-		}
-		for(auto it = piece_positions.begin(); it != piece_positions.end(); ++it)
-		{
-			int p = grid_converter(*this, *it);
-			if(__grid[p]->isViable() && !(__grid[p]->getTurned()))
-			{
-				__grid[p]->getTurned();
-				__grid[p]->setTurned(true);
-				//perform turn and implement all consequences
-				//if it is no longer viable, finish()?
-				//delete it how?
-			}
-		}
-		for(auto it = piece_positions.begin(); it != piece_positions.end(); ++it)
-		{
-			int p = grid_converter(*this, *it);
-		}
+		std::set<int> piece_positions;
 	}
 
 	void Game::play(bool verbose)
 	{
-		//TODO:check tests for play(bool) to get an idea of what it does
+		//if(verbose)   //print the game board
 	}
 
 	std::ostream &operator<<(std::ostream &os, const Game &game)
