@@ -3,6 +3,7 @@
 //
 
 #include <iomanip>
+#include <vector>
 #include <set>
 
 #include "Game.h"
@@ -11,9 +12,11 @@
 #include "Food.h"
 #include "Advantage.h"
 
+using std::array;
+using std::vector;
+
 namespace Gaming
 {
-	//TODO: order the __grid
 	//in populate() and all the add(piece)-s
 	int grid_converter(const Game g, const Position& p)
 	{
@@ -98,13 +101,13 @@ namespace Gaming
 	}
 
 	//default and three argument constructors
-	Game::Game():__numInitAgents(NUM_INIT_AGENT_FACTOR),__numInitResources(NUM_INIT_RESOURCE_FACTOR),
+	Game::Game():__numInitAgents(0),__numInitResources(0),
 	             __width(MIN_WIDTH), __height(MIN_HEIGHT), __grid(__width * __height, nullptr), __round(0),
 	             __status(NOT_STARTED), __verbose(false)
 	{}
 
 	Game::Game(unsigned int width, unsigned int height, bool manual):
-			__numInitAgents(NUM_INIT_AGENT_FACTOR), __numInitResources(NUM_INIT_RESOURCE_FACTOR),
+			__numInitAgents(0), __numInitResources(0), __grid(__width * __height, nullptr),
 			__round(0),__status(NOT_STARTED), __verbose(false)
 	{
 		if(width < MIN_WIDTH || height < MIN_HEIGHT)
@@ -116,8 +119,16 @@ namespace Gaming
 	}
 
 	//copy constructor
-	Game::Game(const Game &another)
-	{}
+	Game::Game(const Game &another):
+	__numInitAgents(another.getNumAgents()), __numInitResources(another.getNumResources()), __width(another.__width),
+	__height(another.__height), __grid(__width * __height, nullptr), __round(another.__round),
+	__status(another.__status), __verbose(another.__verbose)
+	{
+		for(int i = 0; i <= another.__grid.size(); ++i)
+		{
+			__grid[i] = another.__grid[i];
+		}
+	}
 
 	//destructor
 	Game::~Game()
@@ -195,18 +206,11 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-		bool taken = false;
-		for(auto it = __grid.begin(); it != __grid.end(); ++it)
+		if(__grid[grid_converter(*this, position)] == nullptr)
 		{
-			if(*it != nullptr)
-			{
-				Position occupied = (*it)->getPosition();
-				if (position.x == occupied.x && position.y == occupied.y)
-					taken = true;
-			}
+			__grid[grid_converter(*this, position)] = new Simple(*this, position, Game::STARTING_AGENT_ENERGY);
+			++__numInitAgents;
 		}
-		if(!(taken))
-			__grid.push_back(new Simple(*this, position, Game::STARTING_AGENT_ENERGY));
 	}
 
 	void Game::addSimple(const Position &position, double energy)
@@ -215,10 +219,12 @@ namespace Gaming
 		addSimple(position);
 		if(grid_size != __grid.size())
 		{
-			auto it = __grid.end();
-			Agent *agent = dynamic_cast<Simple *>(*it);
-			double i = agent->getEnergy();
-			agent->addEnergy(energy - i);
+			Agent* agent = dynamic_cast<Agent*>(__grid[grid_converter(*this, position)]);
+			if(agent)
+			{
+				double i = agent->getEnergy();
+				agent->addEnergy(energy - i);
+			}
 		}
 	}
 
@@ -238,24 +244,15 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-		bool taken = false;
-		for(auto it = __grid.begin(); it != __grid.end(); ++it)
-		{
-			if(*it != nullptr)
-			{
-				Position occupied = (*it)->getPosition();
-				if (position.x == occupied.x && position.y == occupied.y)
-					taken = true;
-			}
-		}
-		if(!(taken))
-			__grid.push_back(new Strategic(*this, position, Game::STARTING_AGENT_ENERGY));
-		//TODO: if(Strategy is given) add Strategy();
+		//TODO: add strategy stuff
+		if(__grid[grid_converter(*this, position)] == nullptr)
+			__grid[grid_converter(*this, position)] = new Strategic(*this, position, Game::STARTING_AGENT_ENERGY);
 	}
 
 	void Game::addStrategic(unsigned x, unsigned y, Strategy *s)
 	{
 		Position p(x,y);
+		//TODO: add strategy stuff
 		addStrategic(p);
 	}
 
@@ -263,18 +260,8 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-		bool taken = false;
-		for(auto it = __grid.begin(); it != __grid.end(); ++it)
-		{
-			if(*it != nullptr)
-			{
-				Position occupied = (*it)->getPosition();
-				if (position.x == occupied.x && position.y == occupied.y)
-					taken = true;
-			}
-		}
-		if(!(taken))
-			__grid.push_back(new Food(*this, position, Game::STARTING_RESOURCE_CAPACITY));
+		if(__grid[grid_converter(*this, position)] == nullptr)
+			__grid[grid_converter(*this, position)] = new Food(*this, position, Game::STARTING_RESOURCE_CAPACITY);
 	}
 
 	void Game::addFood(unsigned x, unsigned y)
@@ -287,18 +274,8 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-			bool taken = false;
-			for(auto it = __grid.begin(); it != __grid.end(); ++it)
-			{
-				if(*it != nullptr)
-				{
-					Position occupied = (*it)->getPosition();
-					if (position.x == occupied.x && position.y == occupied.y)
-						taken = true;
-				}
-			}
-			if(!(taken))
-				__grid.push_back(new Advantage(*this, position, Game::STARTING_RESOURCE_CAPACITY));
+		if(__grid[grid_converter(*this, position)] == nullptr)
+			__grid[grid_converter(*this, position)] = new Advantage(*this, position, Game::STARTING_RESOURCE_CAPACITY);
 	}
 
 	void Game::addAdvantage(unsigned x, unsigned y)
@@ -363,7 +340,6 @@ namespace Gaming
 		return surroundings;
 	}
 
-	//TODO: make sure reachSurrounding still does what I think it does
 	const ActionType Game::reachSurroundings(const Position &from, const Position &to)
 	{
 		ActionType ac;
@@ -390,16 +366,13 @@ namespace Gaming
 		else
 			ac = STAY;
 
-
 		return ac;
 	}
 
-	//TODO: HOW CAN THEY BE SIMPLIFIED?
 	bool Game::isLegal(const ActionType &ac, const Position &pos) const
 	{
 		bool __isLegal = false;
 		Position newPos(pos);
-
 		switch(ac)
 		{
 			case N: newPos.x -= 1;

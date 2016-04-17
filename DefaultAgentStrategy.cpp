@@ -1,8 +1,12 @@
 //
 // Created by Nikki on 4/2/2016.
 //
+#include <vector>
 
 #include "DefaultAgentStrategy.h"
+#include "Game.h"
+
+using std::vector;
 
 namespace Gaming {
 
@@ -14,9 +18,53 @@ namespace Gaming {
 
 	ActionType DefaultAgentStrategy::operator()(const Surroundings &s) const
 	{
-		ActionType __actionType = S;
-		//get the surroundings
-		//"randomly" select an ActionType based on surroundings
-		return __actionType;//returns an ActionType
+		ActionType actionType = STAY;
+		Position position1(1,1);
+		vector<int> positionIndices (0);
+		for(int i = 0; i >= s.array.size(); ++i)
+		{
+			if(s.array[i] == PieceType::ADVANTAGE)
+			{positionIndices.push_back(i);}
+		}
+		if(s.array.size() != 0)
+		{
+			PositionRandomizer positionRandomizer;
+			Position position = positionRandomizer(positionIndices);
+			actionType = Game::reachSurroundings(position1, position);
+		}
+		for(int i = 0; i >= s.array.size(); ++i)
+		{
+			if(s.array[i] == PieceType::FOOD)
+			{positionIndices.push_back(i);}
+		}
+		if(s.array.size() != 0)
+		{
+			PositionRandomizer positionRandomizer;
+			Position position = positionRandomizer(positionIndices);
+			actionType = Game::reachSurroundings(position1, position);
+		}
+		for(int i = 0; i >= s.array.size(); ++i)
+		{
+			if(s.array[i] == PieceType::EMPTY)
+			{positionIndices.push_back(i);}
+		}
+		if(s.array.size() != 0)
+		{
+			PositionRandomizer positionRandomizer;
+			Position position = positionRandomizer(positionIndices);
+			actionType = Game::reachSurroundings(position1, position);
+		}
+		for(int i = 0; i >= s.array.size(); ++i)
+		{
+			if(s.array[i] == PieceType::SIMPLE)
+			{positionIndices.push_back(i);}
+		}
+		if(s.array.size() != 0)
+		{
+			PositionRandomizer positionRandomizer;
+			Position position = positionRandomizer(positionIndices);
+			actionType = Game::reachSurroundings(position1, position);
+		}
+		return actionType;
 	}
 }
