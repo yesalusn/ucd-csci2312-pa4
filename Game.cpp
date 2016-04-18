@@ -17,7 +17,6 @@ using std::vector;
 
 namespace Gaming
 {
-	//in populate() and all the add(piece)-s
 	int grid_converter(const Game g, const Position& p)
 	{
 		int i = (g.getWidth() * p.x) + p.y;
@@ -107,8 +106,8 @@ namespace Gaming
 	{}
 
 	Game::Game(unsigned int width, unsigned int height, bool manual):
-			__numInitAgents(0), __numInitResources(0), __grid(__width * __height, nullptr),
-			__round(0),__status(NOT_STARTED), __verbose(false)
+			__numInitAgents(0), __numInitResources(0), __width(width), __height(height),
+			__grid(__width * __height, nullptr), __round(0),__status(NOT_STARTED), __verbose(false)
 	{
 		if(width < MIN_WIDTH || height < MIN_HEIGHT)
 			throw InsufficientDimensionsEx(MIN_WIDTH, MIN_HEIGHT, width, height);
@@ -145,45 +144,54 @@ namespace Gaming
 	//accessors
 	unsigned int Game::getNumPieces() const
 	{
-		unsigned int numPieces = getNumResources() + getNumAgents();
+		unsigned int numPieces = this->getNumResources() + this->getNumAgents();
 		return numPieces;
 	}
 
 	unsigned int Game::getNumAgents() const
 	{
-		unsigned int numAgents = getNumSimple() + getNumStrategic();
+		unsigned int numAgents = this->getNumSimple() + this->getNumStrategic();
 		return numAgents;
 	}
 
 	unsigned int Game::getNumSimple() const
 	{
-		unsigned int numAgents = 0;
-		for (auto it = __grid.begin(); it != __grid.end(); ++it)
+		unsigned int numSimple = 0;
+		for(auto it = __grid.begin(); it != __grid.end(); ++it)
 		{
-			Agent *agent = dynamic_cast<Simple*>(*it);
-			if (agent) numAgents ++;
+			if(*it != nullptr && (*it)->getType() == PieceType::SIMPLE)
+			{
+				Simple* simple = dynamic_cast<Simple *>(*it);
+				if(simple)   ++numSimple;
+			}
 		}
-		return numAgents;
+		return numSimple;
 	}
 
 	unsigned int Game::getNumStrategic() const
 	{
-		unsigned int numAgents = 0;
-		for (auto it = __grid.begin(); it != __grid.end(); ++it)
+		unsigned int numStrategic = 0;
+		for(auto it = __grid.begin(); it != __grid.end(); ++it)
 		{
-			Agent *agent = dynamic_cast<Strategic*>(*it);
-			if (agent) numAgents ++;
+			if(*it != nullptr && (*it)->getType() == PieceType::STRATEGIC)
+			{
+				Strategic* strategic = dynamic_cast<Strategic *>(*it);
+				if(strategic)   ++numStrategic;
+			}
 		}
-		return numAgents;
+		return numStrategic;
 	}
 
 	unsigned int Game::getNumResources() const
 	{
 		unsigned int numResources = 0;
-		for (auto it = __grid.begin(); it != __grid.end(); ++it)
+		for(auto it = __grid.begin(); it != __grid.end(); ++it)
 		{
-			Resource *resource = dynamic_cast<Resource*>(*it);
-			if (resource) numResources ++;
+			if(*it != nullptr && ((*it)->getType() == PieceType::FOOD || (*it)->getType() == PieceType::ADVANTAGE))
+			{
+				Resource* resource = dynamic_cast<Resource*>(*it);
+				if(resource)    ++ numResources;
+			}
 		}
 		return numResources;
 	}
@@ -244,16 +252,25 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-		//TODO: add strategy stuff
 		if(__grid[grid_converter(*this, position)] == nullptr)
-			__grid[grid_converter(*this, position)] = new Strategic(*this, position, Game::STARTING_AGENT_ENERGY);
+		{
+			if (s != nullptr)
+				__grid[grid_converter(*this, position)] = new Strategic(*this, position, Game::STARTING_AGENT_ENERGY,
+				                                                        s);
+			else
+				__grid[grid_converter(*this, position)] = new Strategic(*this, position, Game::STARTING_AGENT_ENERGY);
+			++__numInitAgents;
+		}
+
 	}
 
 	void Game::addStrategic(unsigned x, unsigned y, Strategy *s)
 	{
 		Position p(x,y);
-		//TODO: add strategy stuff
-		addStrategic(p);
+		if(s != nullptr)
+			addStrategic(p, s);
+		else
+			addStrategic(p);
 	}
 
 	void Game::addFood(const Position &position)
@@ -261,7 +278,10 @@ namespace Gaming
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
 		if(__grid[grid_converter(*this, position)] == nullptr)
+		{
 			__grid[grid_converter(*this, position)] = new Food(*this, position, Game::STARTING_RESOURCE_CAPACITY);
+			++__numInitResources;
+		}
 	}
 
 	void Game::addFood(unsigned x, unsigned y)
@@ -275,7 +295,10 @@ namespace Gaming
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
 		if(__grid[grid_converter(*this, position)] == nullptr)
+		{
 			__grid[grid_converter(*this, position)] = new Advantage(*this, position, Game::STARTING_RESOURCE_CAPACITY);
+			++__numInitResources;
+		}
 	}
 
 	void Game::addAdvantage(unsigned x, unsigned y)
@@ -466,6 +489,25 @@ namespace Gaming
 	//      second case, the position was empty, so needs to be added to the set.
 
 		std::set<int> piece_positions;
+		for(auto it = __grid.begin(); it != __grid.end(); ++it)
+		{
+			if(*it != nullptr && (*it)->isViable())
+				piece_positions.insert(grid_converter(*this, (*it)->getPosition()));
+		}
+		for(auto it =  piece_positions.begin(); it != piece_positions.end(); ++it)
+		{
+			if(!(__grid[(*it)]->getTurned()))
+			{
+				__grid[(*it)]->setTurned(true);
+				Position p = __grid[(*it)]->getPosition();
+				Surroundings s = getSurroundings(p);
+				ActionType ac = __grid[(*it)]->takeTurn(s);
+				if(isLegal(ac,p))
+				{
+					__grid[(*it)]->setPosition(move(p,ac));
+				}
+			}
+		}
 	}
 
 	void Game::play(bool verbose)
@@ -490,7 +532,7 @@ namespace Gaming
 
 						if (piecePos.x == pos.x && piecePos.y == pos.y)
 						{
-							os << "[" << std::setw(6) << *(*it) << "]";//TODO: what is going on here *(*it)
+							os << "[" << std::setw(6) << (*it) << "]";
 						}
 					}
 					else
