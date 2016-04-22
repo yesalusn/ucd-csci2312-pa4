@@ -920,7 +920,7 @@ void test_game_smoketest(ErrorContext &ec) {
             Game g(Game::MIN_WIDTH-1, 5);
             pass = false;
         } catch (InsufficientDimensionsEx &ex) {
-            std::cerr << "Exception generated: " << ex << std::endl;
+            //std::cerr << "Exception generated: " << ex << std::endl;
             pass = (ex.getName() == "InsufficientDimensionsEx");
         }
     }

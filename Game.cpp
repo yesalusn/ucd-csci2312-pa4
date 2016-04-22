@@ -17,7 +17,7 @@ using std::vector;
 
 namespace Gaming
 {
-	int grid_converter(const Game g, const Position& p)
+	int grid_converter(const Game& g, const Position& p)
 	{
 		int i = (g.getWidth() * p.x) + p.y;
 		return i;
@@ -117,18 +117,6 @@ namespace Gaming
 		if(!(manual))   populate();
 	}
 
-	//copy constructor
-	Game::Game(const Game &another):
-	__numInitAgents(another.getNumAgents()), __numInitResources(another.getNumResources()), __width(another.__width),
-	__height(another.__height), __grid(__width * __height, nullptr), __round(another.__round),
-	__status(another.__status), __verbose(another.__verbose)
-	{
-		for(int i = 0; i <= another.__grid.size(); ++i)
-		{
-			__grid[i] = another.__grid[i];
-		}
-	}
-
 	//destructor
 	Game::~Game()
 	{
@@ -214,18 +202,17 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-		if(__grid[grid_converter(*this, position)] == nullptr)
-		{
-			__grid[grid_converter(*this, position)] = new Simple(*this, position, Game::STARTING_AGENT_ENERGY);
-			++__numInitAgents;
-		}
+		if(__grid[grid_converter(*this, position)] != nullptr)
+			throw PositionNonemptyEx(position.x, position.y);
+		__grid[grid_converter(*this, position)] = new Simple(*this, position, Game::STARTING_AGENT_ENERGY);
+		++__numInitAgents;
 	}
 
 	void Game::addSimple(const Position &position, double energy)
 	{
 		int grid_size = __grid.size();
 		addSimple(position);
-		if(grid_size != __grid.size())
+		if(grid_size > __grid.size())
 		{
 			Agent* agent = dynamic_cast<Agent*>(__grid[grid_converter(*this, position)]);
 			if(agent)
@@ -252,16 +239,14 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-		if(__grid[grid_converter(*this, position)] == nullptr)
-		{
-			if (s != nullptr)
-				__grid[grid_converter(*this, position)] = new Strategic(*this, position, Game::STARTING_AGENT_ENERGY,
-				                                                        s);
-			else
-				__grid[grid_converter(*this, position)] = new Strategic(*this, position, Game::STARTING_AGENT_ENERGY);
-			++__numInitAgents;
-		}
-
+		if(__grid[grid_converter(*this, position)] != nullptr)
+			throw PositionNonemptyEx(position.x, position.y);
+		if (s != nullptr)
+			__grid[grid_converter(*this, position)] = new Strategic(*this, position, Game::STARTING_AGENT_ENERGY,
+			                                                        s);
+		else
+			__grid[grid_converter(*this, position)] = new Strategic(*this, position, Game::STARTING_AGENT_ENERGY);
+		++__numInitAgents;
 	}
 
 	void Game::addStrategic(unsigned x, unsigned y, Strategy *s)
@@ -277,11 +262,10 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-		if(__grid[grid_converter(*this, position)] == nullptr)
-		{
-			__grid[grid_converter(*this, position)] = new Food(*this, position, Game::STARTING_RESOURCE_CAPACITY);
-			++__numInitResources;
-		}
+		if(__grid[grid_converter(*this, position)] != nullptr)
+			throw PositionNonemptyEx(position.x, position.y);
+		__grid[grid_converter(*this, position)] = new Food(*this, position, Game::STARTING_RESOURCE_CAPACITY);
+		++__numInitResources;
 	}
 
 	void Game::addFood(unsigned x, unsigned y)
@@ -294,11 +278,10 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-		if(__grid[grid_converter(*this, position)] == nullptr)
-		{
-			__grid[grid_converter(*this, position)] = new Advantage(*this, position, Game::STARTING_RESOURCE_CAPACITY);
-			++__numInitResources;
-		}
+		if(__grid[grid_converter(*this, position)] != nullptr)
+			throw PositionNonemptyEx(position.x, position.y);
+		__grid[grid_converter(*this, position)] = new Advantage(*this, position, Game::STARTING_RESOURCE_CAPACITY);
+		++__numInitResources;
 	}
 
 	void Game::addAdvantage(unsigned x, unsigned y)
@@ -310,19 +293,7 @@ namespace Gaming
 	const Surroundings Game::getSurroundings(const Position &pos) const
 	{
 		Gaming::Surroundings surroundings;
-		bool pieceFound = false;
-		if(pos.y < 0 || pos.y >= __width || pos.x < 0 || pos.x >= __height)
-			throw OutOfBoundsEx(__width, __height, pos.y, pos.x);
-		for(auto it = __grid.begin(); it != __grid.end(); ++it)
-		{
-			if(*it != nullptr)
-			{
-				Position ofPiece = (*it)->getPosition();
-				if(pos.x == ofPiece.x && pos.y == ofPiece.y)
-					pieceFound = true;
-			}
-		}
-		if(pieceFound)
+		if(__grid[grid_converter(*this,pos)])
 		{
 			int k = 0;
 			std::array<Position, 9> posArray;
@@ -338,28 +309,16 @@ namespace Gaming
 			{
 				if(posArray[i].y < 0 || posArray[i].y >= __width || posArray[i].x < 0 || posArray[i].x >= __height)
 					surroundings.array[i] = Gaming::INACCESSIBLE;
-				else
+				else if(__grid[grid_converter(*this,Position(posArray[i].x, posArray[i].y))])
 				{
-					for (auto it = __grid.begin(); it != __grid.end(); ++it)
-					{
-						if (*it != nullptr &&
-						    (*it)->getPosition().x == posArray[i].x && (*it)->getPosition().y == posArray[i].y)
-							surroundings.array[i] = (*it)->getType();
-					}
+					surroundings.array[i] = __grid[grid_converter(*this,
+					                                              Position(posArray[i].x, posArray[i].y))]->getType();
 				}
+				else
+					surroundings.array[i] = Gaming::EMPTY;
 			}
 			surroundings.array[4] = Gaming::SELF;
-			int i = 0;
-			do
-			{
-				if(surroundings.array[i] < 0 || surroundings.array[i] > 5)
-					surroundings.array[i] = Gaming::EMPTY;
-				++i;
-			}while(!(surroundings.array.end()));
-			if(surroundings.array[i] < 0 || surroundings.array[i] > 5)
-				surroundings.array[i] = Gaming::EMPTY;
 		}
-
 		return surroundings;
 	}
 
