@@ -14,11 +14,13 @@ namespace Gaming
 	const char Strategic::STRATEGIC_ID = 'T';
 
 	Strategic::Strategic(const Game &g, const Position &p, double energy, Strategy *s):
-	Agent(g, p, energy)
+	Agent(g, p, energy), __strategy(s)
 	{}
 
 	Strategic::~Strategic()
-	{}
+	{
+		delete __strategy;
+	}
 
 	void Strategic::print(std::ostream &os) const
 	{
@@ -29,6 +31,6 @@ namespace Gaming
 
 	ActionType Strategic::takeTurn(const Surroundings &s) const
 	{
-
+		return (*__strategy)(s);
 	}
 }
