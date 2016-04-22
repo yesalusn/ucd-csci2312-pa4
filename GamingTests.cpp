@@ -257,304 +257,304 @@ void test_piece_turntaking(ErrorContext &ec, unsigned int numRuns) {
             ec.result(pass);
         }
 
-        ec.DESC("3x3, manual, simple agent moving to an empty position");
-
-        {
-            Game g(3, 3);
-
-            // populate the game environment
-            g.addStrategic(0, 1); g.addSimple(1, 1);
-
-            // create a Simple, passing it the game and a position
-            Simple s(g, Position(0, 2), Game::STARTING_AGENT_ENERGY);
-
-            // create an upcast pointer to the agent for polymorphic turn taking
-            Piece *piece = &s;
-
-            // get the Surroundings for the agent's position from the Game
-            Surroundings surr = g.getSurroundings(Position(0, 2));
-
-            // call takeTurn on the Piece pointer to the agent
-            ActionType action = piece->takeTurn(surr);
-
-            // if there is a resource, it should ask to there
-            // and so on...
-            pass = (action == ActionType::S);
-            if (! pass) std::cout << action << std::endl;
-
-            ec.result(pass);
-        }
-
-        ec.DESC("3x3, manual, simple agent staying in place, not attacking");
-
-        {
-            Game g(3, 3);
-
-            // populate the game environment
-            g.addStrategic(0, 1); g.addSimple(1, 1); g.addSimple(1, 2);
-
-            // create a Simple, passing it the game and a position
-            Simple s(g, Position(0, 2), Game::STARTING_AGENT_ENERGY);
-
-            // create an upcast pointer to the agent for polymorphic turn taking
-            Piece *piece = &s;
-
-            // get the Surroundings for the agent's position from the Game
-            Surroundings surr = g.getSurroundings(Position(0, 2));
-
-            // call takeTurn on the Piece pointer to the agent
-            ActionType action = piece->takeTurn(surr);
-
-            // if there is a resource, it should ask to there
-            // and so on...
-            pass = (action == ActionType::STAY);
-            if (! pass) std::cout << action << std::endl;
-
-            ec.result(pass);
-        }
-
-        ec.DESC("3x3, manual, resources don't move");
-
-        {
-            Game g(3, 3);
-
-            Food f(g, Position(0, 0), Game::STARTING_RESOURCE_CAPACITY);
-            Advantage a(g, Position(2, 1), Game::STARTING_RESOURCE_CAPACITY);
-
-            // create an upcast pointer to the agent for polymorphic turn taking
-            Piece *piece[2] = { &f, &a };
-
-            // get the Surroundings for a Piece's position
-            Surroundings surr[2] =
-                    { g.getSurroundings(Position(0, 0)), g.getSurroundings(Position(2, 1)) };
-
-            // call takeTurn on the Piece pointer
-            ActionType actions[2] =
-                    { piece[0]->takeTurn(surr[0]), piece[1]->takeTurn(surr[1]) };
-
-            pass = (actions[0] == ActionType::STAY) &&
-                   (actions[1] == ActionType::STAY);
-
-            ec.result(pass);
-        }
-
-        ec.DESC("3x3, manual, default strategic agent choosing an advantage");
-
-        {
-            Game g(3, 3);
-
-            // populate the game environment
-            g.addFood(0, 0); g.addAdvantage(2, 1);
-
-            // create a default Strategic, passing it the game and a position
-            Strategic s(g, Position(1, 1), Game::STARTING_AGENT_ENERGY);
-
-            // create an upcast pointer to the agent for polymorphic turn taking
-            Piece *piece = &s;
-
-            // get the Surroundings for the agent's position from the Game
-            Surroundings surr = g.getSurroundings(Position(1, 1));
-
-            // call takeTurn on the Piece pointer to the agent
-            ActionType action = piece->takeTurn(surr);
-
-            // if there is a resource, it should ask to there
-            // and so on...
-            pass = (action == ActionType::S);
-            if (! pass) std::cout << action << std::endl;
-
-            ec.result(pass);
-        }
-
-        ec.DESC("3x3, manual, hemmed in default strategic challenging a simple");
-
-        {
-            Game g(3, 3);
-
-            // populate the game environment
-            g.addSimple(0, 0); g.addSimple(0, 1); g.addSimple(0, 2);
-            g.addStrategic(1, 0); g.addStrategic(1, 2);
-            g.addSimple(2, 0); g.addSimple(2, 1); g.addSimple(2, 2);
-
-            // create a default Strategic, passing it the game and a position
-            Strategic s(g, Position(1, 1), Game::STARTING_AGENT_ENERGY);
-
-            // create an upcast pointer to the agent for polymorphic turn taking
-            Piece *piece = &s;
-
-            // get the Surroundings for the agent's position from the Game
-            Surroundings surr = g.getSurroundings(Position(1, 1));
-
-            // call takeTurn on the Piece pointer to the agent
-            ActionType action = piece->takeTurn(surr);
-
-            // if there is a resource, it should ask to there
-            // and so on...
-            pass = (action == ActionType::NW) ||
-                   (action == ActionType::N)  ||
-                   (action == ActionType::NE) ||
-                   (action == ActionType::SW) ||
-                   (action == ActionType::S)  ||
-                   (action == ActionType::SE);
-            if (! pass) std::cout << action << std::endl;
-
-            ec.result(pass);
-        }
-
-        ec.DESC("3x3, manual, hemmed in default strategic staying put");
-
-        {
-            Game g(3, 3);
-
-            // populate the game environment
-            g.addStrategic(0, 0); g.addStrategic(0, 1); g.addStrategic(0, 2);
-            g.addStrategic(1, 0); g.addStrategic(1, 2);
-            g.addStrategic(2, 0); g.addStrategic(2, 1); g.addStrategic(2, 2);
-
-            // create a default Strategic, passing it the game and a position
-            Strategic s(g, Position(1, 1), Game::STARTING_AGENT_ENERGY);
-
-            // create an upcast pointer to the agent for polymorphic turn taking
-            Piece *piece = &s;
-
-            // get the Surroundings for the agent's position from the Game
-            Surroundings surr = g.getSurroundings(Position(1, 1));
-
-            // call takeTurn on the Piece pointer to the agent
-            ActionType action = piece->takeTurn(surr);
-
-            // if there is a resource, it should ask to there
-            // and so on...
-            pass = (action == ActionType::STAY);
-            if (! pass) std::cout << action << std::endl;
-
-            ec.result(pass);
-        }
-
-        ec.DESC("3x3, manual, hemmed in default strategic fleeing");
-
-        {
-            Game g(3, 3);
-
-            // populate the game environment
-            g.addStrategic(0, 0); g.addStrategic(0, 1); g.addStrategic(0, 2);
-            g.addStrategic(1, 0);
-            g.addStrategic(2, 0); g.addStrategic(2, 1); g.addStrategic(2, 2);
-
-            // create a default Strategic, passing it the game and a position
-            Strategic s(g, Position(1, 1), Game::STARTING_AGENT_ENERGY);
-
-            // create an upcast pointer to the agent for polymorphic turn taking
-            Piece *piece = &s;
-
-            // get the Surroundings for the agent's position from the Game
-            Surroundings surr = g.getSurroundings(Position(1, 1));
-
-            // call takeTurn on the Piece pointer to the agent
-            ActionType action = piece->takeTurn(surr);
-
-            // if there is a resource, it should ask to there
-            // and so on...
-            pass = (action == ActionType::E);
-            if (! pass) std::cout << action << std::endl;
-
-            ec.result(pass);
-        }
-
-        ec.DESC("3x3, manual, hemmed in aggressive strategic attacking");
-
-        {
-            Game g(3, 3);
-
-            // populate the game environment
-            g.addStrategic(0, 0); g.addStrategic(0, 1); g.addStrategic(0, 2);
-            g.addStrategic(1, 0);
-            g.addStrategic(2, 0); g.addStrategic(2, 1); g.addStrategic(2, 2);
-
-            // create an aggressive Strategic, passing it the game and a position
-            Strategic s(g, Position(1, 1),
-                        Game::STARTING_AGENT_ENERGY,
-                        new AggressiveAgentStrategy(Game::STARTING_AGENT_ENERGY));
-
-            // create an upcast pointer to the agent for polymorphic turn taking
-            Piece *piece = &s;
-
-            // get the Surroundings for the agent's position from the Game
-            Surroundings surr = g.getSurroundings(Position(1, 1));
-
-            // call takeTurn on the Piece pointer to the agent
-            ActionType action = piece->takeTurn(surr);
-
-            // if there is a resource, it should ask to there
-            // and so on...
-            pass = (action != ActionType::E);
-            if (! pass) std::cout << action << std::endl;
-
-            ec.result(pass);
-        }
-
-        ec.DESC("3x3, manual, strong aggressive strategic prefers to attack");
-
-        {
-            Game g(3, 3);
-
-            // populate the game environment
-            g.addFood(0, 0); g.addAdvantage(0, 2);
-            g.addStrategic(1, 0);
-            g.addFood(2, 1); g.addSimple(2, 2);
-
-            // create an aggressive Strategic, passing it the game and a position
-            Strategic s(g, Position(1, 1),
-                        Game::STARTING_AGENT_ENERGY,
-                        new AggressiveAgentStrategy(Game::STARTING_AGENT_ENERGY));
-
-            // create an upcast pointer to the agent for polymorphic turn taking
-            Piece *piece = &s;
-
-            // get the Surroundings for the agent's position from the Game
-            Surroundings surr = g.getSurroundings(Position(1, 1));
-
-            // call takeTurn on the Piece pointer to the agent
-            ActionType action = piece->takeTurn(surr);
-
-            // if there is a resource, it should ask to there
-            // and so on...
-            pass = (action == ActionType::W) || (action == ActionType::SE);
-            if (! pass) std::cout << action << std::endl;
-
-            ec.result(pass);
-        }
-
-        ec.DESC("3x3, manual, weak aggressive strategic goes for an advantage");
-
-        {
-            Game g(3, 3);
-
-            // populate the game environment
-            g.addFood(0, 0); g.addAdvantage(0, 2);
-            g.addStrategic(1, 0);
-            g.addFood(2, 1); g.addSimple(2, 2);
-
-            // create an aggressive Strategic, passing it the game and a position
-            double energy = Game::STARTING_AGENT_ENERGY / 2; // weaken the agent
-            Strategic s(g, Position(1, 1), energy, new AggressiveAgentStrategy(energy));
-
-            // create an upcast pointer to the agent for polymorphic turn taking
-            Piece *piece = &s;
-
-            // get the Surroundings for the agent's position from the Game
-            Surroundings surr = g.getSurroundings(Position(1, 1));
-
-            // call takeTurn on the Piece pointer to the agent
-            ActionType action = piece->takeTurn(surr);
-
-            // if there is a resource, it should ask to there
-            // and so on...
-            pass = (action == ActionType::NE);
-            if (! pass) std::cout << action << std::endl;
-
-            ec.result(pass);
-        }
+//        ec.DESC("3x3, manual, simple agent moving to an empty position");
+//
+//        {
+//            Game g(3, 3);
+//
+//            // populate the game environment
+//            g.addStrategic(0, 1); g.addSimple(1, 1);
+//
+//            // create a Simple, passing it the game and a position
+//            Simple s(g, Position(0, 2), Game::STARTING_AGENT_ENERGY);
+//
+//            // create an upcast pointer to the agent for polymorphic turn taking
+//            Piece *piece = &s;
+//
+//            // get the Surroundings for the agent's position from the Game
+//            Surroundings surr = g.getSurroundings(Position(0, 2));
+//
+//            // call takeTurn on the Piece pointer to the agent
+//            ActionType action = piece->takeTurn(surr);
+//
+//            // if there is a resource, it should ask to there
+//            // and so on...
+//            pass = (action == ActionType::S);
+//            if (! pass) std::cout << action << std::endl;
+//
+//            ec.result(pass);
+//        }
+//
+//        ec.DESC("3x3, manual, simple agent staying in place, not attacking");
+//
+//        {
+//            Game g(3, 3);
+//
+//            // populate the game environment
+//            g.addStrategic(0, 1); g.addSimple(1, 1); g.addSimple(1, 2);
+//
+//            // create a Simple, passing it the game and a position
+//            Simple s(g, Position(0, 2), Game::STARTING_AGENT_ENERGY);
+//
+//            // create an upcast pointer to the agent for polymorphic turn taking
+//            Piece *piece = &s;
+//
+//            // get the Surroundings for the agent's position from the Game
+//            Surroundings surr = g.getSurroundings(Position(0, 2));
+//
+//            // call takeTurn on the Piece pointer to the agent
+//            ActionType action = piece->takeTurn(surr);
+//
+//            // if there is a resource, it should ask to there
+//            // and so on...
+//            pass = (action == ActionType::STAY);
+//            if (! pass) std::cout << action << std::endl;
+//
+//            ec.result(pass);
+//        }
+//
+//        ec.DESC("3x3, manual, resources don't move");
+//
+//        {
+//            Game g(3, 3);
+//
+//            Food f(g, Position(0, 0), Game::STARTING_RESOURCE_CAPACITY);
+//            Advantage a(g, Position(2, 1), Game::STARTING_RESOURCE_CAPACITY);
+//
+//            // create an upcast pointer to the agent for polymorphic turn taking
+//            Piece *piece[2] = { &f, &a };
+//
+//            // get the Surroundings for a Piece's position
+//            Surroundings surr[2] =
+//                    { g.getSurroundings(Position(0, 0)), g.getSurroundings(Position(2, 1)) };
+//
+//            // call takeTurn on the Piece pointer
+//            ActionType actions[2] =
+//                    { piece[0]->takeTurn(surr[0]), piece[1]->takeTurn(surr[1]) };
+//
+//            pass = (actions[0] == ActionType::STAY) &&
+//                   (actions[1] == ActionType::STAY);
+//
+//            ec.result(pass);
+//        }
+//
+//        ec.DESC("3x3, manual, default strategic agent choosing an advantage");
+//
+//        {
+//            Game g(3, 3);
+//
+//            // populate the game environment
+//            g.addFood(0, 0); g.addAdvantage(2, 1);
+//
+//            // create a default Strategic, passing it the game and a position
+//            Strategic s(g, Position(1, 1), Game::STARTING_AGENT_ENERGY);
+//
+//            // create an upcast pointer to the agent for polymorphic turn taking
+//            Piece *piece = &s;
+//
+//            // get the Surroundings for the agent's position from the Game
+//            Surroundings surr = g.getSurroundings(Position(1, 1));
+//
+//            // call takeTurn on the Piece pointer to the agent
+//            ActionType action = piece->takeTurn(surr);
+//
+//            // if there is a resource, it should ask to there
+//            // and so on...
+//            pass = (action == ActionType::S);
+//            if (! pass) std::cout << action << std::endl;
+//
+//            ec.result(pass);
+//        }
+//
+//        ec.DESC("3x3, manual, hemmed in default strategic challenging a simple");
+//
+//        {
+//            Game g(3, 3);
+//
+//            // populate the game environment
+//            g.addSimple(0, 0); g.addSimple(0, 1); g.addSimple(0, 2);
+//            g.addStrategic(1, 0); g.addStrategic(1, 2);
+//            g.addSimple(2, 0); g.addSimple(2, 1); g.addSimple(2, 2);
+//
+//            // create a default Strategic, passing it the game and a position
+//            Strategic s(g, Position(1, 1), Game::STARTING_AGENT_ENERGY);
+//
+//            // create an upcast pointer to the agent for polymorphic turn taking
+//            Piece *piece = &s;
+//
+//            // get the Surroundings for the agent's position from the Game
+//            Surroundings surr = g.getSurroundings(Position(1, 1));
+//
+//            // call takeTurn on the Piece pointer to the agent
+//            ActionType action = piece->takeTurn(surr);
+//
+//            // if there is a resource, it should ask to there
+//            // and so on...
+//            pass = (action == ActionType::NW) ||
+//                   (action == ActionType::N)  ||
+//                   (action == ActionType::NE) ||
+//                   (action == ActionType::SW) ||
+//                   (action == ActionType::S)  ||
+//                   (action == ActionType::SE);
+//            if (! pass) std::cout << action << std::endl;
+//
+//            ec.result(pass);
+//        }
+//
+//        ec.DESC("3x3, manual, hemmed in default strategic staying put");
+//
+//        {
+//            Game g(3, 3);
+//
+//            // populate the game environment
+//            g.addStrategic(0, 0); g.addStrategic(0, 1); g.addStrategic(0, 2);
+//            g.addStrategic(1, 0); g.addStrategic(1, 2);
+//            g.addStrategic(2, 0); g.addStrategic(2, 1); g.addStrategic(2, 2);
+//
+//            // create a default Strategic, passing it the game and a position
+//            Strategic s(g, Position(1, 1), Game::STARTING_AGENT_ENERGY);
+//
+//            // create an upcast pointer to the agent for polymorphic turn taking
+//            Piece *piece = &s;
+//
+//            // get the Surroundings for the agent's position from the Game
+//            Surroundings surr = g.getSurroundings(Position(1, 1));
+//
+//            // call takeTurn on the Piece pointer to the agent
+//            ActionType action = piece->takeTurn(surr);
+//
+//            // if there is a resource, it should ask to there
+//            // and so on...
+//            pass = (action == ActionType::STAY);
+//            if (! pass) std::cout << action << std::endl;
+//
+//            ec.result(pass);
+//        }
+//
+//        ec.DESC("3x3, manual, hemmed in default strategic fleeing");
+//
+//        {
+//            Game g(3, 3);
+//
+//            // populate the game environment
+//            g.addStrategic(0, 0); g.addStrategic(0, 1); g.addStrategic(0, 2);
+//            g.addStrategic(1, 0);
+//            g.addStrategic(2, 0); g.addStrategic(2, 1); g.addStrategic(2, 2);
+//
+//            // create a default Strategic, passing it the game and a position
+//            Strategic s(g, Position(1, 1), Game::STARTING_AGENT_ENERGY);
+//
+//            // create an upcast pointer to the agent for polymorphic turn taking
+//            Piece *piece = &s;
+//
+//            // get the Surroundings for the agent's position from the Game
+//            Surroundings surr = g.getSurroundings(Position(1, 1));
+//
+//            // call takeTurn on the Piece pointer to the agent
+//            ActionType action = piece->takeTurn(surr);
+//
+//            // if there is a resource, it should ask to there
+//            // and so on...
+//            pass = (action == ActionType::E);
+//            if (! pass) std::cout << action << std::endl;
+//
+//            ec.result(pass);
+//        }
+//
+//        ec.DESC("3x3, manual, hemmed in aggressive strategic attacking");
+//
+//        {
+//            Game g(3, 3);
+//
+//            // populate the game environment
+//            g.addStrategic(0, 0); g.addStrategic(0, 1); g.addStrategic(0, 2);
+//            g.addStrategic(1, 0);
+//            g.addStrategic(2, 0); g.addStrategic(2, 1); g.addStrategic(2, 2);
+//
+//            // create an aggressive Strategic, passing it the game and a position
+//            Strategic s(g, Position(1, 1),
+//                        Game::STARTING_AGENT_ENERGY,
+//                        new AggressiveAgentStrategy(Game::STARTING_AGENT_ENERGY));
+//
+//            // create an upcast pointer to the agent for polymorphic turn taking
+//            Piece *piece = &s;
+//
+//            // get the Surroundings for the agent's position from the Game
+//            Surroundings surr = g.getSurroundings(Position(1, 1));
+//
+//            // call takeTurn on the Piece pointer to the agent
+//            ActionType action = piece->takeTurn(surr);
+//
+//            // if there is a resource, it should ask to there
+//            // and so on...
+//            pass = (action != ActionType::E);
+//            if (! pass) std::cout << action << std::endl;
+//
+//            ec.result(pass);
+//        }
+//
+//        ec.DESC("3x3, manual, strong aggressive strategic prefers to attack");
+//
+//        {
+//            Game g(3, 3);
+//
+//            // populate the game environment
+//            g.addFood(0, 0); g.addAdvantage(0, 2);
+//            g.addStrategic(1, 0);
+//            g.addFood(2, 1); g.addSimple(2, 2);
+//
+//            // create an aggressive Strategic, passing it the game and a position
+//            Strategic s(g, Position(1, 1),
+//                        Game::STARTING_AGENT_ENERGY,
+//                        new AggressiveAgentStrategy(Game::STARTING_AGENT_ENERGY));
+//
+//            // create an upcast pointer to the agent for polymorphic turn taking
+//            Piece *piece = &s;
+//
+//            // get the Surroundings for the agent's position from the Game
+//            Surroundings surr = g.getSurroundings(Position(1, 1));
+//
+//            // call takeTurn on the Piece pointer to the agent
+//            ActionType action = piece->takeTurn(surr);
+//
+//            // if there is a resource, it should ask to there
+//            // and so on...
+//            pass = (action == ActionType::W) || (action == ActionType::SE);
+//            if (! pass) std::cout << action << std::endl;
+//
+//            ec.result(pass);
+//        }
+//
+//        ec.DESC("3x3, manual, weak aggressive strategic goes for an advantage");
+//
+//        {
+//            Game g(3, 3);
+//
+//            // populate the game environment
+//            g.addFood(0, 0); g.addAdvantage(0, 2);
+//            g.addStrategic(1, 0);
+//            g.addFood(2, 1); g.addSimple(2, 2);
+//
+//            // create an aggressive Strategic, passing it the game and a position
+//            double energy = Game::STARTING_AGENT_ENERGY / 2; // weaken the agent
+//            Strategic s(g, Position(1, 1), energy, new AggressiveAgentStrategy(energy));
+//
+//            // create an upcast pointer to the agent for polymorphic turn taking
+//            Piece *piece = &s;
+//
+//            // get the Surroundings for the agent's position from the Game
+//            Surroundings surr = g.getSurroundings(Position(1, 1));
+//
+//            // call takeTurn on the Piece pointer to the agent
+//            ActionType action = piece->takeTurn(surr);
+//
+//            // if there is a resource, it should ask to there
+//            // and so on...
+//            pass = (action == ActionType::NE);
+//            if (! pass) std::cout << action << std::endl;
+//
+//            ec.result(pass);
+//        }
     }
 }
 
@@ -972,14 +972,14 @@ void test_game_populate(ErrorContext &ec, unsigned int numRuns) {
                 g.addFood(4, 3);
                 pass = false;
             } catch (PositionNonemptyEx &ex) {
-                std::cerr << "Exception generated: " << ex << std::endl;
+               // std::cerr << "Exception generated: " << ex << std::endl;
                 pass = (ex.getName() == "PositionNonemptyEx");
             }
             try {
                 g.addStrategic(0, 2);
                 pass = false;
             } catch (PositionNonemptyEx &ex) {
-                std::cerr << "Exception generated: " << ex << std::endl;
+                //std::cerr << "Exception generated: " << ex << std::endl;
                 pass = (ex.getName() == "PositionNonemptyEx");
             }
 
@@ -1004,7 +1004,7 @@ void test_game_populate(ErrorContext &ec, unsigned int numRuns) {
                 g.addAdvantage(4, 5);
                 pass = false;
             } catch (OutOfBoundsEx &ex) {
-                std::cerr << "Exception generated: " << ex << std::endl;
+                //std::cerr << "Exception generated: " << ex << std::endl;
                 pass = pass && (ex.getName() == "OutOfBoundsEx");
             }
 
@@ -1013,7 +1013,7 @@ void test_game_populate(ErrorContext &ec, unsigned int numRuns) {
                 g.addStrategic(pos);
                 pass = false;
             } catch (OutOfBoundsEx &ex) {
-                std::cerr << "Exception generated: " << ex << std::endl;
+                //std::cerr << "Exception generated: " << ex << std::endl;
                 pass = pass && (ex.getName() == "OutOfBoundsEx");
             }
 

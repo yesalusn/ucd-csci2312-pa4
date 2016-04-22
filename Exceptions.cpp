@@ -98,11 +98,15 @@ namespace Gaming
 
 	PositionNonemptyEx::PositionNonemptyEx(unsigned x, unsigned y):
 	PositionEx(x, y)
-	{}
+	{
+		this->setName("PositionNonemptyEx");
+	}
 
 	PositionEmptyEx::PositionEmptyEx(unsigned x, unsigned y):
 	PositionEx(x, y)
-	{}
+	{
+		this->setName("PositionEmptyEx");
+	}
 
 	void PosVectorEmptyEx::__print_args(std::ostream &os) const
 	{
@@ -110,5 +114,7 @@ namespace Gaming
 	}
 
 	PosVectorEmptyEx::PosVectorEmptyEx()
-	{}
+	{
+		this->setName("PosVectorEmptyEx");
+	}
 }

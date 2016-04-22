@@ -111,8 +111,6 @@ namespace Gaming
 	{
 		if(width < MIN_WIDTH || height < MIN_HEIGHT)
 			throw InsufficientDimensionsEx(MIN_WIDTH, MIN_HEIGHT, width, height);
-		__width = width;
-		__height = height;
 		__grid.resize(__width * __height, nullptr);
 		if(!(manual))   populate();
 	}
@@ -189,11 +187,8 @@ namespace Gaming
 		if(y < 0 || y >= __width || x < 0 || x >= __height)
 			throw OutOfBoundsEx(__width, __height, y, x);
 		Piece* p = nullptr;
-		for(auto it = __grid.begin(); it != __grid.end(); ++it)
-		{
-			if(*it != nullptr && (*it)->getPosition().x == x && (*it)->getPosition().y == y)
-				p = *it;
-		}
+		if(__grid[grid_converter(*this, Position(x,y))])
+			p = __grid[grid_converter(*this,Position(x,y))];
 		return p;
 	}
 
@@ -202,7 +197,7 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-		if(__grid[grid_converter(*this, position)] != nullptr)
+		if(__grid[grid_converter(*this, position)])
 			throw PositionNonemptyEx(position.x, position.y);
 		__grid[grid_converter(*this, position)] = new Simple(*this, position, Game::STARTING_AGENT_ENERGY);
 		++__numInitAgents;
@@ -239,7 +234,7 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-		if(__grid[grid_converter(*this, position)] != nullptr)
+		if(__grid[grid_converter(*this, position)])
 			throw PositionNonemptyEx(position.x, position.y);
 		if (s != nullptr)
 			__grid[grid_converter(*this, position)] = new Strategic(*this, position, Game::STARTING_AGENT_ENERGY,
@@ -262,7 +257,7 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-		if(__grid[grid_converter(*this, position)] != nullptr)
+		if(__grid[grid_converter(*this, position)])
 			throw PositionNonemptyEx(position.x, position.y);
 		__grid[grid_converter(*this, position)] = new Food(*this, position, Game::STARTING_RESOURCE_CAPACITY);
 		++__numInitResources;
@@ -278,7 +273,7 @@ namespace Gaming
 	{
 		if(position.y < 0 || position.y >= __width || position.x < 0 || position.x >= __height)
 			throw OutOfBoundsEx(__width, __height, position.y, position.x);
-		if(__grid[grid_converter(*this, position)] != nullptr)
+		if(__grid[grid_converter(*this, position)])
 			throw PositionNonemptyEx(position.x, position.y);
 		__grid[grid_converter(*this, position)] = new Advantage(*this, position, Game::STARTING_RESOURCE_CAPACITY);
 		++__numInitResources;
@@ -293,32 +288,29 @@ namespace Gaming
 	const Surroundings Game::getSurroundings(const Position &pos) const
 	{
 		Gaming::Surroundings surroundings;
-		if(__grid[grid_converter(*this,pos)])
+		surroundings.array = {EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY,EMPTY};
+		int k = 0;
+		std::array<Position, 9> posArray;
+		for (int i = -1; i < 2; ++i)
 		{
-			int k = 0;
-			std::array<Position, 9> posArray;
-			for (int i = -1; i < 2; ++i)
+			for (int j = -1; j < 2; ++j)
 			{
-				for (int j = -1; j < 2; ++j)
-				{
-					posArray[k] = Position(pos.x + i, pos.y + j);
-					k++;
-				}
+				posArray[k] = Position(pos.x + i, pos.y + j);
+				k++;
 			}
-			for(int i = 0; i < posArray.size(); ++i)
-			{
-				if(posArray[i].y < 0 || posArray[i].y >= __width || posArray[i].x < 0 || posArray[i].x >= __height)
-					surroundings.array[i] = Gaming::INACCESSIBLE;
-				else if(__grid[grid_converter(*this,Position(posArray[i].x, posArray[i].y))])
-				{
-					surroundings.array[i] = __grid[grid_converter(*this,
-					                                              Position(posArray[i].x, posArray[i].y))]->getType();
-				}
-				else
-					surroundings.array[i] = Gaming::EMPTY;
-			}
-			surroundings.array[4] = Gaming::SELF;
 		}
+		for(int i = 0; i < 9; ++i)
+		{
+			if(posArray[i].y < 0 || posArray[i].y >= __width || posArray[i].x < 0 || posArray[i].x >= __height)
+				surroundings.array[i] = Gaming::INACCESSIBLE;
+			else if(__grid[grid_converter(*this, posArray[i])])
+			{
+				surroundings.array[i] = __grid[grid_converter(*this, posArray[i])]->getType();
+			}
+			else
+				surroundings.array[i] = Gaming::EMPTY;
+		}
+		surroundings.array[4] = Gaming::SELF;
 		return surroundings;
 	}
 
