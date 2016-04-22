@@ -29,13 +29,34 @@ namespace Gaming
 
 	Piece &Agent::operator*(Piece &other)
 	{
-		return other.interact(this);
+		Agent* a = dynamic_cast<Agent*>(&other);
+		if(a)   interact(a);
+		else
+		{
+			Resource* r = dynamic_cast<Resource*>(&other);
+			interact(r);
+		}
+		return *this;
 	}
 
 	Piece &Agent::interact(Agent *agent)
 	{
-		if(getEnergy() < agent->getEnergy())
+		if(getEnergy() == agent->getEnergy())
 		{
+			finish();
+			agent->finish();
+			__energy = 0.00;
+			agent->__energy = 0.00;
+		}
+		else if(getEnergy() > agent->getEnergy())
+		{
+			__energy -= agent->__energy;
+			agent->finish();
+			agent->__energy = 0.00;
+		}
+		else
+		{
+			agent->__energy -= __energy;
 			finish();
 			__energy = 0.00;
 		}

@@ -20,6 +20,7 @@ namespace Gaming
 	{
 		double capacity = __capacity;
 		__capacity = 0.00;
+		finish();
 		return capacity;
 	}
 
@@ -41,7 +42,15 @@ namespace Gaming
 
 	Piece &Resource::operator*(Piece &other)
 	{
-		return other.interact(this);
+		Agent* a = dynamic_cast<Agent*>(&other);
+		if(a)   interact(a);
+		else
+		{
+			//this will not get used, but it's necessary
+			Resource *r = dynamic_cast<Resource *>(&other);
+			interact(r);
+		}
+		return *this;
 	}
 
 	Piece &Resource::interact(Agent *agent)
